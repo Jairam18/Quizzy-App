@@ -1,0 +1,97 @@
+# version: "3.9"
+
+# services:
+#   db:
+#     image: mysql:8
+#     container_name: quizzy-db
+#     environment:
+#       MYSQL_ROOT_PASSWORD: root
+#       MYSQL_DATABASE: quizzydb
+#     volumes:
+#       - quizzy-db-data:/var/lib/mysql
+#     healthcheck:
+#       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 20
+#     ports:
+#       - "3308:3306"
+    
+
+#   backend:
+#     build: ./quizzy-backend
+#     container_name: quizzy-backend
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     restart: unless-stopped
+#     environment:
+#       SERVER_PORT: 8081
+#       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/quizzydb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#       SPRING_DATASOURCE_USERNAME: root
+#       SPRING_DATASOURCE_PASSWORD: root
+
+#     ports:
+#       - "8081:8081"
+
+
+#   frontend:
+#     build: ./quizzy
+#     container_name: quizzy-frontend
+#     restart: unless-stopped
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - backend
+
+# volumes:
+#   quizzy-db-data:
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: quizzy-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: quizzydb
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # If you need host access for Workbench/DBeaver, uncomment:
+    # ports:
+    #   - "3307:3306"          # host:container
+
+  backend:
+    build: ./quizzy-backend
+    container_name: quizzy-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/quizzydb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      # Optional JPA hints:
+      # SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+    ports:
+      - "8081:8081"           # backend reachable at http://localhost:8081
+    restart: unless-stopped
+
+  frontend:
+    build: ./quizzy
+    container_name: quizzy
+    depends_on:
+      - backend
+    ports:
+      - "80:80"             # frontend at http://localhost:3000
+    restart: unless-stopped
+    # If your nginx.conf proxies /api to the backend, it will reach service name "backend" on port 8081
+
+volumes:
+  mysql_data: {}
