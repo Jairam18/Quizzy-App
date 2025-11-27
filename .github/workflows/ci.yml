@@ -1,8 +1,9 @@
-name: Deploy Vite React to GitHub Pages
+name: Deploy Vite React App to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -14,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -26,11 +27,15 @@ jobs:
         working-directory: quizzy
         run: npm install
 
-      - name: Build
+      - name: Build Vite app
         working-directory: quizzy
         run: npm run build
 
-      - name: Upload artifact
+      # ✅ IMPORTANT: SPA fallback for GitHub Pages
+      - name: Add SPA fallback (404.html)
+        run: cp quizzy/dist/index.html quizzy/dist/404.html
+
+      - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: quizzy/dist
@@ -46,4 +51,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
